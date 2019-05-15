@@ -1,0 +1,70 @@
+---
+title: "SafetyCulture Headend Example"
+author: "Michael Mantfeld"
+date: "15/05/2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#setup
+
+source('config.R')
+require('RPostgreSQL')
+require('ggplot2')
+
+drv <- dbDriver("PostgreSQL")
+# creates a connection to the postgres database
+# note that "con" will be used later in each connection to the database
+con <- dbConnect(drv, dbname = pgdb,
+                 host = pghost, port = pgport,
+                 user = pguser, password = pgpassword)
+```
+
+## Overview
+
+The purpose of this report is to gain insight on the behaviour of users in the first week of their trial.
+
+To gain some insight into how first week product usage impacts customer retetion, the number of logins a user performs in their first week was compared to users that purchased a license compared to those who didn't
+
+The following query is run to gain the dataset.
+
+```{sql, connection=con, output.var="logincount"}
+select
+    u.user_id
+  , u.active
+  , count ( e.* ) as login_count
+from
+  only sc.sc_user u
+  left outer join
+  sc.sc_user_event e
+    on u.user_id = e.user_id
+    and e.event_ts >= u.signup_ts
+    and e.event_ts <= u.signup_ts + interval '7 day'
+    and e.event_type = 'login'
+group by
+    u.user_id
+  , u.active
+```
+
+## Findings
+
+The following two bar charts display a count of users by the number of times they login to the application in their first week, split by whether the user purchased a license for the software.
+
+
+```{r pressure, echo=FALSE}
+g <- ggplot(logincount, aes(login_count))
+g + geom_bar() +
+  facet_grid(active ~ .) +
+  theme_minimal() +
+  ggtitle("Login count by whether user purchased subscription") +
+  xlab("# First week logins") +
+  ylab("# Users")
+```
+
+As the graph shows, users who did not purchase a license logged into the application significantly less than those who extended their license.
+
+This may be evidence that user retention beyond their trial period could be improved by giving a user incentives to login to the application more often in their first week.
