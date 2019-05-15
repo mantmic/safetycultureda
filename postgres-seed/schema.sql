@@ -191,3 +191,4 @@ $$
 		drop table if exists sc_user_new ;
 	end ;
 $$ language plpgsql ;
+

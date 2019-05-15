@@ -24,3 +24,35 @@ services:
             - postgres:postgres
         depends_on:
             - postgres
+    message-broker:
+        image: vsouza/sqs-local
+        restart: always
+        networks:
+          - sc
+        ports:
+          - "9324:9324"
+    user-event-seed:
+        build: ./user-event
+        networks:
+          - sc
+        volumes:
+          - ./data:/data
+        command: python data-seed.py
+        links:
+            - message-broker:messagebroker
+        depends_on:
+            - message-broker
+    user-event:
+        build: ./user-event
+        restart: always
+        networks:
+          - sc
+        command: python data-listen.py
+        links:
+            - message-broker:messagebroker
+            - postgres:postgres
+        depends_on:
+            - message-broker
+            - postgres
+            - postgres-seed
+            - user-event-seed

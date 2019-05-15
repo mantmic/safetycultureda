@@ -1,5 +1,5 @@
 # wait for database to go online
-sleep 5
+sleep 15
 # connect to database
 PGPASSWORD=postgres psql -h postgres -U postgres postgres << EOF
 \i schema.sql
