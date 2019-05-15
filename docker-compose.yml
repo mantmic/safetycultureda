@@ -11,3 +11,16 @@ services:
           - "5432:5432"
         networks:
           - sc
+    postgres-seed:
+        image: postgres:11.3
+        networks:
+          - sc
+        volumes:
+          - ./data:/data
+          - ./postgres-seed:/postgres-seed
+        working_dir: /postgres-seed
+        command: bash load-data.sh
+        links:
+            - postgres:postgres
+        depends_on:
+            - postgres
